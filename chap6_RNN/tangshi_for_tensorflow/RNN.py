@@ -25,7 +25,7 @@ def process_poems(file_name):
             try:
                 title, content = line.strip().split(':')
                 content = content.replace(' ', '')
-                if '_' in content or '(' in content or '（' in content or '《' in content or '[' in content or                                 start_token in content or end_token in content:
+                if '_' in content or '(' in content or '（' in content or '《' in content or '[' in content or start_token in content or end_token in content:
                     continue
                 if len(content) < 5 or len(content) > 80:
                     continue
@@ -38,7 +38,7 @@ def process_poems(file_name):
     # 统计每个字出现次数
     all_words = []
     for poem in poems:
-        all_words += [word for word in poem]  
+        all_words += [word for word in poem]
     counter = collections.Counter(all_words)  # 统计词和词频。
     count_pairs = sorted(counter.items(), key=lambda x: -x[1])  # 排序
     words, _ = zip(*count_pairs)
@@ -63,12 +63,12 @@ def rnn_model(model, input_data, output_data, vocab_size, rnn_size=128, num_laye
         cell_fun = tf.contrib.rnn.GRUCell
     else:
         cell_fun = tf.contrib.rnn.BasicLSTMCell
-    #？？？？？？？？？？？？？？？？？？？？？？
+    # ？？？？？？？？？？？？？？？？？？？？？？
     # 每层128个小单元，一共有两层，输出的Ct 和 Ht 要分开放到两个tuple中
     # 在下面补全代码 
     #################################################
     cell = cell_fun(num_units=128, state_is_tuple=True)
-    cell = tf.contrib.rnn.MultiRNNCell([cell]*2, state_is_tuple=True)
+    cell = tf.contrib.rnn.MultiRNNCell([cell] * 2, state_is_tuple=True)
     #################################################
     # 如果是训练模式，output_data不为None，则初始状态shape为[batch_size * rnn_size]
     # 如果是生成模式，output_data为None，则初始状态shape为[1 * rnn_size]
@@ -79,20 +79,19 @@ def rnn_model(model, input_data, output_data, vocab_size, rnn_size=128, num_laye
 
     # 构建隐层
     with tf.device("/cpu:0"):
-        embedding = tf.Variable(tf.random_uniform([vocab_size + 1, rnn_size], -1.0, 1.0),name = 'embedding')
+        embedding = tf.Variable(tf.random_uniform([vocab_size + 1, rnn_size], -1.0, 1.0), name='embedding')
         inputs = tf.nn.embedding_lookup(embedding, input_data)
-    #？？？？？？？？？？？？？？？？？？？？？？？？？？
+    # ？？？？？？？？？？？？？？？？？？？？？？？？？？
     ####################################################    
-    outputs, last_state = tf.nn.dynamic_rnn(cell=cell, inputs=inputs, initial_state=initial_state)# 填写里面的内容
+    outputs, last_state = tf.nn.dynamic_rnn(cell=cell, inputs=inputs, initial_state=initial_state)  # 填写里面的内容
     ######################################################
     output = tf.reshape(outputs, [-1, rnn_size])
-    
+
     weights = tf.Variable(tf.truncated_normal([rnn_size, vocab_size + 1]))
     bias = tf.Variable(tf.zeros(shape=[vocab_size + 1]))
-    logits = tf.nn.bias_add(tf.matmul(output, weights), bias=bias) # 一层全连接
+    logits = tf.nn.bias_add(tf.matmul(output, weights), bias=bias)  # 一层全连接
 
-
-    if output_data is not None: # 训练模式
+    if output_data is not None:  # 训练模式
         labels = tf.one_hot(tf.reshape(output_data, [-1]), depth=vocab_size + 1)
         loss = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
         total_loss = tf.reduce_mean(loss)
@@ -103,7 +102,7 @@ def rnn_model(model, input_data, output_data, vocab_size, rnn_size=128, num_laye
         end_points['total_loss'] = total_loss
         end_points['loss'] = loss
         end_points['last_state'] = last_state
-    else: # 生成模式
+    else:  # 生成模式
         prediction = tf.nn.softmax(logits)
         end_points['initial_state'] = initial_state
         end_points['last_state'] = last_state
@@ -159,24 +158,35 @@ def gen_poem(begin_word):
 
     end_points = rnn_model(model='lstm', input_data=input_data, output_data=None, vocab_size=len(
         vocabularies), rnn_size=128, num_layers=2, batch_size=64, learning_rate=0.01)
-    # 如果指定开始的字
-    if begin_word:
-        word = begin_word
-    else:
-        word = to_word(predict, vocabularies)
-        
+
     saver = tf.train.Saver(tf.global_variables())
     init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
     with tf.Session() as sess:
         sess.run(init_op)
-        saver.restore(sess, './poem_generator')# 恢复之前训练好的模型 
+        saver.restore(sess, './poem_generator')  # 恢复之前训练好的模型
+
+        [predict, last_state] = sess.run([
+            end_points['prediction'],
+            end_points['last_state']
+        ], feed_dict={input_data: [[word_int_map[start_token]]]})
+        # 如果指定开始的字
+        if begin_word:
+            word = begin_word
+        else:
+            # 没有指定，则从Start token开始
+            word = to_word(predict, vocabularies)
         poem = ''
-        #???????????????????????????????????????
+        # ???????????????????????????????????????
         # 下面部分代码主要功能是根据指定的开始字符来生成诗歌
         #########################################
-        
-        
+        while word != end_token:
+            poem += word
+            [predict, last_state] = sess.run([
+                end_points['prediction'],
+                end_points['last_state']
+            ], feed_dict={input_data: [[word_int_map[word]]], end_points['initial_state']: last_state})
+            word = to_word(predict, vocabularies)
         #########################################
         return poem
 
@@ -213,12 +223,15 @@ def generate_batch(batch_size, poems_vec, word_to_int):
         y_batches.append(y_data)
     return x_batches, y_batches
 
-def to_word(predict, vocabs):# 预测的结果转化成汉字
+
+def to_word(predict, vocabs):  # 预测的结果转化成汉字
     sample = np.argmax(predict)
     if sample > len(vocabs):
         sample = len(vocabs) - 1
     return vocabs[sample]
-def pretty_print_poem(poem):#  令打印的结果更工整
+
+
+def pretty_print_poem(poem):  # 令打印的结果更工整
     poem_sentences = poem.split('。')
     for s in poem_sentences:
         if s != '' and len(s) > 10:
@@ -233,9 +246,11 @@ def pretty_print_poem(poem):#  令打印的结果更工整
 print('[INFO] train tang poem...')
 run_training() # 训练模型
 print('[INFO] write tang poem...')
-poem2 = gen_poem('月')# 生成诗歌
-print("#" * 25)
-pretty_print_poem(poem2)
-print('#' * 25)
-#训练模型时间比较长，训练模型完成后每次生成诗歌的时，不需要再次训练 ，可以注销上面的 run_training()。生成部分执行速度很快
-
+word_list = ['日', '红', '山', '夜', '湖', '海', '月']
+for word in word_list:
+    poem2 = gen_poem(word)     # 生成诗歌
+    print("#" * 11 + " " + word + " " + "#" * 10)
+    pretty_print_poem(poem2)
+    print('#' * 25)
+    tf.reset_default_graph()
+# 训练模型时间比较长，训练模型完成后每次生成诗歌的时，不需要再次训练 ，可以注销上面的 run_training()。生成部分执行速度很快
