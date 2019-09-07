@@ -30,3 +30,6 @@ pytorch版本的卷积神经网络 需要补齐  self.conv1 中 nn.Conv2d( )  �
 ## 运行结果
 <img src="./doc/res.jpg" alt="res">
 
+## 推荐教程
+- [Tensorflow 官方中文教程-MNIST 进阶](http://www.tensorfly.cn/tfdoc/tutorials/mnist_pros.html)
+- [Tensorflow 搭建自己的神经网络 (莫烦 Python 教程)](https://www.bilibili.com/video/av16001891/?p=28)

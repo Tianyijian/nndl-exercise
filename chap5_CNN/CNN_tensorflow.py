@@ -36,7 +36,7 @@ def bias_variable(shape):
 def conv2d(x, W):
     # 每一维度  滑动步长全部是 1， padding 方式 选择 same
     # 提示 使用函数  tf.nn.conv2d
-    return tf.nn.conv2d(x, W, strides=1, padding='SAME')
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
 
 def max_pool_2x2(x):
@@ -46,7 +46,7 @@ def max_pool_2x2(x):
 
 
 # define placeholder for inputs to network
-xs = tf.placeholder(tf.float32, [None, 784]) / 255.
+xs = tf.placeholder(tf.float32, [None, 784])
 ys = tf.placeholder(tf.float32, [None, 10])
 keep_prob = tf.placeholder(tf.float32)
 x_image = tf.reshape(xs, [-1, 28, 28, 1])
