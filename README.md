@@ -9,34 +9,39 @@ tensorflow 2.0
 pytorch >0.4
 ## Exercise 
 
-###  warmup
-numpy是Python中对于矩阵处理很实用的工具包，本小节作业主要是熟悉基本的numpy操作。
+- [ ] ###  chap1_warmup
+  numpy是Python中对于矩阵处理很实用的工具包，本小节作业主要是熟悉基本的numpy操作。
 
-### linear regression
+- [ ] ### chap2_linear regression
 
-线性回归模型
+  线性回归模型
 
-### support vector machine
+- [ ] ### chap3_support vector machine
 
-支持向量机
+  支持向量机
 
-### simple neural network
+- [ ] ### chap3_softmax regression
 
-利用numpy实现全连接神经网络
+  logistic 回归和softmax 回归模型
 
-### convolutional neural network
-利用卷积神经网络，处理MNIST 数据集分类问题。
+- [ ] ### chap4_simple neural network
 
-### recurrent neural network
-基于RNN神经网络的唐诗生成问题。
-### restricted Boltzmann machine
-限制玻尔兹曼机。
+  利用numpy实现全连接神经网络
 
-### gaussian mixture
+- [x] ### chap5_convolutional neural network
+  利用卷积神经网络，处理MNIST 数据集分类问题
 
-高斯混合模型
+- [x] ### chap6_recurrent neural network
+  基于RNN神经网络的唐诗生成问题
 
-### project 1 - deep reinforcement learning
-强化学习： 黑白棋
+- [ ] ### chap11_gaussian mixture
+
+  高斯混合模型
+
+- [ ] ### chap12_restricted Boltzmann machine
+  限制玻尔兹曼机
+
+- [ ] ### chap14_deep reinforcement learning
+  强化学习： 黑白棋
 
 
